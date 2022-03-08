@@ -83,7 +83,7 @@ async function findSuccessfulCommit(workflow_id, run_id, owner, repo, branch, la
     repo,
     branch,
     workflow_id,
-    event: lastSuccessfulEvent,
+    event: lastSuccessfulEvent === 'any' ? undefined : lastSuccessfulEvent,
     status: 'success'
   }).then(({ data: { workflow_runs } }) => workflow_runs.map(run => run.head_sha));
 
