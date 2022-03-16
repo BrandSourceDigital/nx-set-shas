@@ -44,8 +44,10 @@ let BASE_SHA;
       process.stdout.write(`Commit: ${BASE_SHA}\n`);
     }
   }
-  core.setOutput('base', BASE_SHA);
-  core.setOutput('head', HEAD_SHA);
+
+  const stripNewLineEndings = sha => sha.replace('\n', '');
+  core.setOutput('base', stripNewLineEndings(BASE_SHA));
+  core.setOutput('head', stripNewLineEndings(HEAD_SHA));
 })();
 
 function reportFailure(branchName) {
@@ -76,6 +78,8 @@ async function findSuccessfulCommit(workflow_id, run_id, owner, repo, branch, la
       branch,
       run_id
     }).then(({ data: { workflow_id } }) => workflow_id);
+    process.stdout.write('\n');
+    process.stdout.write(`Workflow Id not provided. Using workflow '${workflow_id}'\n`);
   }
   // fetch all workflow runs on a given repo/branch/workflow with push and success
   const shas = await octokit.request(`GET /repos/${owner}/${repo}/actions/workflows/${workflow_id}/runs`, {
@@ -111,7 +115,7 @@ async function findExistingCommit(shas) {
  */
 async function commitExists(commitSha) {
   try {
-    execSync(`git cat-file -e ${commitSha} 2> /dev/null`);
+    execSync(`git cat-file -e ${commitSha}`, { stdio: ['pipe', 'pipe', null] });
     return true;
   } catch {
     return false;
