@@ -3,7 +3,6 @@ const core = require("@actions/core");
 const github = require('@actions/github');
 const { execSync } = require('child_process');
 const { existsSync } = require('fs');
-const { join } = require('path');
 
 const { runId, repo: { repo, owner }, eventName } = github.context;
 process.env.GITHUB_TOKEN = process.argv[2];
@@ -18,7 +17,7 @@ let BASE_SHA;
 (async () => {
   if (workingDirectory !== defaultWorkingDirectory) {
     if (existsSync(workingDirectory)) {
-      process.chdir(join(__dirname, workingDirectory));
+      process.chdir(workingDirectory);
     } else {
       process.stdout.write('\n');
       process.stdout.write(`WARNING: Working directory '${workingDirectory}' doesn't exist.\n`);
@@ -48,7 +47,7 @@ let BASE_SHA;
         process.stdout.write('\n');
         process.stdout.write(`NOTE: You can instead make this a hard error by setting 'error-on-no-successful-workflow' on the action in your workflow.\n`);
 
-        BASE_SHA = execSync(`git rev-parse HEAD~1`, { encoding: 'utf-8' });
+        BASE_SHA = execSync(`git rev-parse origin/${mainBranchName}~1`, { encoding: 'utf-8' });
         core.setOutput('noPreviousBuild', 'true');
       }
     } else {
@@ -98,7 +97,8 @@ async function findSuccessfulCommit(workflow_id, run_id, owner, repo, branch, la
   const shas = await octokit.request(`GET /repos/${owner}/${repo}/actions/workflows/${workflow_id}/runs`, {
     owner,
     repo,
-    branch,
+    // on non-push workflow runs we do not have branch property
+    branch: lastSuccessfulEvent !== 'push' ? undefined : branch,
     workflow_id,
     event: lastSuccessfulEvent === 'any' ? undefined : lastSuccessfulEvent,
     status: 'success'

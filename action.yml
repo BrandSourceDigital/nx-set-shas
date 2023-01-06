@@ -12,7 +12,7 @@ inputs:
     description: "By default, if no successful workflow is found on the main branch to determine the SHA, we will log a warning and use HEAD~1. Enable this option to error and exit instead."
     default: "false"
   last-successful-event:
-    description: "The type of event to check for the last successful commit corresponding to that workflow-id, E.g. push, pull-request, release etc"
+    description: "The type of event to check for the last successful commit corresponding to that workflow-id, e.g. push, pull-request, release etc"
     default: "push"
   working-directory:
     description: "The directory where your repository is located"
@@ -51,13 +51,11 @@ runs:
 
     - name: Optionally set the derived SHAs as NX_BASE and NX_HEAD environment variables for the current job
       shell: bash
+      if: ${{ inputs.set-environment-variables-for-job == 'true' }}
       run: |
-        # Built-in Github action conditionals are not supported in composite steps so have to check manually in bash
-        if [ "${{ inputs.set-environment-variables-for-job }}" = "true" ]; then
-          echo "NX_BASE=${{ steps.setSHAs.outputs.base }}" >> $GITHUB_ENV
-          echo "NX_HEAD=${{ steps.setSHAs.outputs.head }}" >> $GITHUB_ENV
-          echo "NX_BASE and NX_HEAD environment variables have been set for the current Job"
-        fi
+        echo "NX_BASE=${{ steps.setSHAs.outputs.base }}" >> $GITHUB_ENV
+        echo "NX_HEAD=${{ steps.setSHAs.outputs.head }}" >> $GITHUB_ENV
+        echo "NX_BASE and NX_HEAD environment variables have been set for the current Job"
 branding:
   icon: "terminal"
   color: "blue"
